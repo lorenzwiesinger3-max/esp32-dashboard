@@ -1,11 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>ESP32 Steuerung</title>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f5;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
 
-<button onclick="upOn()">UP</button>
-<button onclick="downOn()">DOWN</button>
+  h1 {
+    background-color: #444;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+    font-size: 2em;
+  }
 
-<div>
-  UP: <span id="upLed">●</span><br>
-  DOWN: <span id="downLed">●</span>
+  .button-container {
+    margin: 30px 0;
+  }
+
+  button {
+    font-size: 1.5em;
+    padding: 20px 40px;
+    margin: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.1s;
+  }
+
+  button:active {
+    transform: scale(0.95);
+  }
+
+  #upBtn { background-color: green; }
+  #downBtn { background-color: blue; }
+
+  .led-container {
+    font-size: 2em;
+    margin-top: 20px;
+  }
+
+  .led {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 0 15px;
+    vertical-align: middle;
+    background-color: gray;
+  }
+
+  .led-label {
+    font-size: 1em;
+    display: block;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+
+<h1>ESP32 Steuerung</h1>
+
+<div class="button-container">
+  <button id="upBtn" onclick="upOn()">UP</button>
+  <button id="downBtn" onclick="downOn()">DOWN</button>
+</div>
+
+<div class="led-container">
+  <div style="display:inline-block;">
+    <div id="upLed" class="led"></div>
+    <span class="led-label">UP</span>
+  </div>
+  <div style="display:inline-block;">
+    <div id="downLed" class="led"></div>
+    <span class="led-label">DOWN</span>
+  </div>
 </div>
 
 <script>
@@ -15,18 +93,21 @@ const client = mqtt.connect("wss://6004ceab5f034711b96b20f893a46340.s1.eu.hivemq
 });
 
 client.on("connect", () => {
+  console.log("MQTT connected");
   client.subscribe("esp32/status/indicator_up");
   client.subscribe("esp32/status/indicator_down");
 });
 
 client.on("message", (topic, msg) => {
+  const message = msg.toString(); // ByteArray -> String
+
   if (topic === "esp32/status/indicator_up")
-    document.getElementById("upLed").style.color =
-      msg == "ON" ? "green" : "gray";
+    document.getElementById("upLed").style.backgroundColor =
+      message === "ON" ? "green" : "gray";
 
   if (topic === "esp32/status/indicator_down")
-    document.getElementById("downLed").style.color =
-      msg == "ON" ? "green" : "gray";
+    document.getElementById("downLed").style.backgroundColor =
+      message === "ON" ? "blue" : "gray";
 });
 
 function upOn() {
@@ -39,3 +120,6 @@ function downOn() {
   setTimeout(() => client.publish("esp32/cmd/button_down", "OFF"), 200);
 }
 </script>
+
+</body>
+</html>
