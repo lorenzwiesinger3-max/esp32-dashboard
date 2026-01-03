@@ -1,0 +1,41 @@
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<button onclick="upOn()">UP</button>
+<button onclick="downOn()">DOWN</button>
+
+<div>
+  UP: <span id="upLed">●</span><br>
+  DOWN: <span id="downLed">●</span>
+</div>
+
+<script>
+const client = mqtt.connect("wss://xxxx.hivemq.cloud:8884/mqtt", {
+  username: "Wiesinger.Lor",
+  password: "1235"
+});
+
+client.on("connect", () => {
+  client.subscribe("esp32/status/indicator_up");
+  client.subscribe("esp32/status/indicator_down");
+});
+
+client.on("message", (topic, msg) => {
+  if (topic === "esp32/status/indicator_up")
+    document.getElementById("upLed").style.color =
+      msg == "ON" ? "green" : "gray";
+
+  if (topic === "esp32/status/indicator_down")
+    document.getElementById("downLed").style.color =
+      msg == "ON" ? "green" : "gray";
+});
+
+function upOn() {
+  client.publish("esp32/cmd/button_up", "ON");
+  setTimeout(() => client.publish("esp32/cmd/button_up", "OFF"), 200);
+}
+
+function downOn() {
+  client.publish("esp32/cmd/button_down", "ON");
+  setTimeout(() => client.publish("esp32/cmd/button_down", "OFF"), 200);
+}
+</script>
