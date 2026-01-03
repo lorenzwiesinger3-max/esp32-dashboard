@@ -2,89 +2,131 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ESP32 Steuerung</title>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 <style>
+  /* --- Grundlayout --- */
   body {
-    font-family: Arial, sans-serif;
-    background: #f0f0f5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
     color: #333;
-    text-align: center;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-  h1 {
-    background-color: #444;
-    color: #fff;
-    margin: 0;
-    padding: 20px;
-    font-size: 2em;
+  header {
+    width: 100%;
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    font-size: 1.8em;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
 
-  .button-container {
-    margin: 30px 0;
+  main {
+    max-width: 400px;
+    width: 90%;
+    margin: 30px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* --- Buttons --- */
+  .buttons {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-bottom: 30px;
   }
 
   button {
-    font-size: 1.5em;
-    padding: 20px 40px;
-    margin: 10px;
+    flex: 1;
+    margin: 0 10px;
+    padding: 20px 0;
+    font-size: 1.4em;
     border: none;
-    border-radius: 10px;
+    border-radius: 15px;
+    color: white;
     cursor: pointer;
-    color: #fff;
-    transition: transform 0.1s;
+    transition: all 0.1s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   }
 
   button:active {
     transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
 
-  #upBtn { background-color: green; }
-  #downBtn { background-color: blue; }
+  #upBtn { background-color: #27ae60; } /* grün */
+  #downBtn { background-color: #2980b9; } /* blau */
 
+  /* --- LED Anzeige --- */
   .led-container {
-    font-size: 2em;
-    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+  }
+
+  .led-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .led {
-    display: inline-block;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    margin: 0 15px;
-    vertical-align: middle;
     background-color: gray;
+    margin-bottom: 8px;
+    transition: background-color 0.3s ease;
   }
 
   .led-label {
-    font-size: 1em;
-    display: block;
-    margin-top: 5px;
+    font-weight: bold;
+  }
+
+  /* --- Smartphone Anpassung --- */
+  @media (max-width: 480px) {
+    button {
+      padding: 18px 0;
+      font-size: 1.2em;
+      margin: 0 5px;
+    }
+    .led {
+      width: 35px;
+      height: 35px;
+    }
   }
 </style>
 </head>
 <body>
 
-<h1>ESP32 Steuerung</h1>
+<header>ESP32 Steuerung</header>
 
-<div class="button-container">
-  <button id="upBtn" onclick="upOn()">UP</button>
-  <button id="downBtn" onclick="downOn()">DOWN</button>
-</div>
+<main>
+  <div class="buttons">
+    <button id="upBtn" onclick="upOn()">UP</button>
+    <button id="downBtn" onclick="downOn()">DOWN</button>
+  </div>
 
-<div class="led-container">
-  <div style="display:inline-block;">
-    <div id="upLed" class="led"></div>
-    <span class="led-label">UP</span>
+  <div class="led-container">
+    <div class="led-box">
+      <div id="upLed" class="led"></div>
+      <span class="led-label">UP</span>
+    </div>
+    <div class="led-box">
+      <div id="downLed" class="led"></div>
+      <span class="led-label">DOWN</span>
+    </div>
   </div>
-  <div style="display:inline-block;">
-    <div id="downLed" class="led"></div>
-    <span class="led-label">DOWN</span>
-  </div>
-</div>
+</main>
 
 <script>
 const client = mqtt.connect("wss://6004ceab5f034711b96b20f893a46340.s1.eu.hivemq.cloud:8884/mqtt", {
@@ -99,15 +141,13 @@ client.on("connect", () => {
 });
 
 client.on("message", (topic, msg) => {
-  const message = msg.toString(); // ByteArray -> String
-
-  if (topic === "esp32/status/indicator_up")
-    document.getElementById("upLed").style.backgroundColor =
-      message === "ON" ? "green" : "gray";
-
-  if (topic === "esp32/status/indicator_down")
-    document.getElementById("downLed").style.backgroundColor =
-      message === "ON" ? "blue" : "gray";
+  const message = msg.toString();
+  if (topic === "esp32/status/indicator_up") {
+    document.getElementById("upLed").style.backgroundColor = message === "ON" ? "green" : "gray";
+  }
+  if (topic === "esp32/status/indicator_down") {
+    document.getElementById("downLed").style.backgroundColor = message === "ON" ? "blue" : "gray";
+  }
 });
 
 function upOn() {
